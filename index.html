@@ -124,10 +124,26 @@ main { flex: 1; display: flex; flex-direction: column; }
 
 .page-card {
   position: relative; border-radius: var(--radius); border: 2px solid var(--border);
-  overflow: hidden; cursor: pointer; transition: all var(--transition); background: var(--surface);
+  overflow: hidden; cursor: pointer; transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition), opacity var(--transition); background: var(--surface);
 }
-.page-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow); }
+.page-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
 .page-card.selected { border-color: var(--accent); background: var(--accent-light); }
+.page-card.selected:hover { box-shadow: 0 10px 15px -3px rgba(37,99,235,0.15); }
+
+/* Drag-to-reorder states */
+.page-card.dragging { opacity: 0.35; transform: scale(0.96); }
+.page-card.drag-over { border-color: var(--accent); border-style: dashed; transform: scale(1.02); }
+
+/* Drag handle */
+.page-card .drag-handle {
+  position: absolute; top: 8px; right: 8px;
+  opacity: 0; transition: opacity var(--transition);
+  cursor: grab; z-index: 2; color: var(--text-secondary);
+  padding: 2px; line-height: 0;
+}
+.page-card:hover .drag-handle { opacity: 0.55; }
+.page-card .drag-handle:hover { opacity: 1; }
+.page-card .drag-handle svg { width: 14px; height: 14px; }
 
 .page-card .thumb {
   aspect-ratio: 8.5/11; background: white;
@@ -352,6 +368,7 @@ main { flex: 1; display: flex; flex-direction: column; }
       <div class="divider"></div>
       <button class="btn btn-sm" onclick="selectOdd()">Odd pages</button>
       <button class="btn btn-sm" onclick="selectEven()">Even pages</button>
+      <button class="btn btn-sm" onclick="invertSelection()">Invert</button>
       <span class="selection-count" id="selectionCount"></span>
     </div>
 
@@ -423,6 +440,7 @@ let totalPages = 0;
 let selectedPages = new Set();
 let splitMode = 'selected';
 let customRanges = [];
+let pageOrder = []; // display order → original page number (enables drag reorder)
 
 const fileInput = document.getElementById('fileInput');
 const uploadBox = document.getElementById('uploadBox');
@@ -465,8 +483,9 @@ async function loadFile(file) {
   document.getElementById('rangeFrom').max = totalPages;
   document.getElementById('rangeTo').max = totalPages;
 
+  pageOrder = Array.from({ length: totalPages }, (_, i) => i + 1);
   selectedPages.clear();
-  for (let i = 1; i <= totalPages; i++) selectedPages.add(i);
+  pageOrder.forEach(p => selectedPages.add(p));
 
   renderGrid();
   updateSelectionCount();
@@ -475,11 +494,18 @@ async function loadFile(file) {
 function renderGrid() {
   const grid = document.getElementById('pageGrid');
   grid.innerHTML = '';
-  for (let i = 1; i <= totalPages; i++) {
+  for (const pageNum of pageOrder) {
     const card = document.createElement('div');
-    card.className = 'page-card' + (selectedPages.has(i) ? ' selected' : '');
-    card.dataset.page = i;
-    card.onclick = () => togglePage(i);
+    card.className = 'page-card' + (selectedPages.has(pageNum) ? ' selected' : '');
+    card.dataset.page = pageNum;
+    card.draggable = true;
+    card.onclick = () => togglePage(pageNum);
+
+    // Drag handle
+    const dragHandle = document.createElement('div');
+    dragHandle.className = 'drag-handle';
+    dragHandle.title = 'Drag to reorder';
+    dragHandle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>';
 
     const thumb = document.createElement('div');
     thumb.className = 'thumb';
@@ -500,19 +526,27 @@ function renderGrid() {
     previewBtn.className = 'preview-btn';
     previewBtn.title = 'Preview page';
     previewBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>';
-    previewBtn.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(i); });
+    previewBtn.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(pageNum); });
     thumb.appendChild(previewBtn);
 
     const label = document.createElement('div');
     label.className = 'label';
-    label.textContent = `Page ${i}`;
+    label.textContent = `Page ${pageNum}`;
 
+    card.appendChild(dragHandle);
     card.appendChild(check);
     card.appendChild(thumb);
     card.appendChild(label);
     grid.appendChild(card);
 
-    renderThumb(i, canvas, shimmer);
+    // Drag events
+    card.addEventListener('dragstart', onDragStart);
+    card.addEventListener('dragover', onDragOver);
+    card.addEventListener('dragleave', onDragLeave);
+    card.addEventListener('drop', onDrop);
+    card.addEventListener('dragend', onDragEnd);
+
+    renderThumb(pageNum, canvas, shimmer);
   }
 }
 
@@ -537,7 +571,7 @@ function togglePage(num) {
 }
 
 function selectAll() {
-  for (let i = 1; i <= totalPages; i++) selectedPages.add(i);
+  pageOrder.forEach(p => selectedPages.add(p));
   document.querySelectorAll('.page-card').forEach(c => c.classList.add('selected'));
   updateSelectionCount();
 }
@@ -548,9 +582,17 @@ function selectNone() {
   updateSelectionCount();
 }
 
+function invertSelection() {
+  pageOrder.forEach(p => selectedPages.has(p) ? selectedPages.delete(p) : selectedPages.add(p));
+  document.querySelectorAll('.page-card').forEach(c => {
+    c.classList.toggle('selected', selectedPages.has(+c.dataset.page));
+  });
+  updateSelectionCount();
+}
+
 function selectOdd() {
   selectedPages.clear();
-  for (let i = 1; i <= totalPages; i += 2) selectedPages.add(i);
+  pageOrder.forEach(p => { if (p % 2 !== 0) selectedPages.add(p); });
   document.querySelectorAll('.page-card').forEach(c => {
     c.classList.toggle('selected', selectedPages.has(+c.dataset.page));
   });
@@ -559,11 +601,48 @@ function selectOdd() {
 
 function selectEven() {
   selectedPages.clear();
-  for (let i = 2; i <= totalPages; i += 2) selectedPages.add(i);
+  pageOrder.forEach(p => { if (p % 2 === 0) selectedPages.add(p); });
   document.querySelectorAll('.page-card').forEach(c => {
     c.classList.toggle('selected', selectedPages.has(+c.dataset.page));
   });
   updateSelectionCount();
+}
+
+// --- Drag to Reorder ---
+
+let dragSrcPage = null;
+
+function onDragStart(e) {
+  dragSrcPage = +this.dataset.page;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (+this.dataset.page !== dragSrcPage) this.classList.add('drag-over');
+}
+
+function onDragLeave() {
+  this.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+  const targetPage = +this.dataset.page;
+  if (dragSrcPage === targetPage) return;
+  const srcIdx = pageOrder.indexOf(dragSrcPage);
+  const tgtIdx = pageOrder.indexOf(targetPage);
+  pageOrder.splice(srcIdx, 1);
+  pageOrder.splice(tgtIdx, 0, dragSrcPage);
+  renderGrid();
+}
+
+function onDragEnd() {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
 
 function updateSelectionCount() {
@@ -656,14 +735,15 @@ async function splitPdf() {
     let files = [];
 
     if (splitMode === 'each') {
-      for (let i = 0; i < totalPages; i++) {
-        progressText.textContent = `Processing page ${i + 1} of ${totalPages}`;
-        progressFill.style.width = `${((i + 1) / totalPages) * 80}%`;
+      for (let i = 0; i < pageOrder.length; i++) {
+        const pageNum = pageOrder[i];
+        progressText.textContent = `Processing page ${i + 1} of ${pageOrder.length}`;
+        progressFill.style.width = `${((i + 1) / pageOrder.length) * 80}%`;
         const newDoc = await PDFDocument.create();
-        const [page] = await newDoc.copyPages(srcDoc, [i]);
+        const [page] = await newDoc.copyPages(srcDoc, [pageNum - 1]);
         newDoc.addPage(page);
         const bytes = await newDoc.save();
-        files.push({ name: `${baseName}_page_${i + 1}.pdf`, bytes });
+        files.push({ name: `${baseName}_page_${pageNum}.pdf`, bytes });
         await tick();
       }
     } else if (splitMode === 'selected') {
@@ -805,7 +885,7 @@ document.getElementById('lightbox').addEventListener('click', function(e) {
 
 function resetApp() {
   pdfDoc = null; pdfBytes = null; totalPages = 0;
-  selectedPages.clear(); customRanges = []; splitMode = 'selected';
+  selectedPages.clear(); customRanges = []; pageOrder = []; splitMode = 'selected';
 
   document.getElementById('uploadZone').style.display = '';
   document.getElementById('workspace').classList.remove('visible');
@@ -820,10 +900,15 @@ function resetApp() {
 }
 
 document.addEventListener('keydown', (e) => {
+  if (document.getElementById('lightbox').classList.contains('visible')) return;
   if (e.key === 'a' && (e.ctrlKey || e.metaKey) && pdfDoc && splitMode === 'selected') {
     e.preventDefault();
     selectAll();
   }
+});
+
+document.getElementById('rangeTo').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addRange();
 });
 </script>
 </body>
