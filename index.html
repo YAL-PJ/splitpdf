@@ -576,28 +576,34 @@ uploadBox.addEventListener('drop', (e) => {
 });
 
 async function loadFile(file) {
-  const buffer = await file.arrayBuffer();
-  pdfBytes = new Uint8Array(buffer);
+  try {
+    const buffer = await file.arrayBuffer();
+    pdfBytes = new Uint8Array(buffer);
 
-  const loadingTask = pdfjsLib.getDocument({ data: pdfBytes.slice() });
-  pdfDoc = await loadingTask.promise;
-  totalPages = pdfDoc.numPages;
+    const loadingTask = pdfjsLib.getDocument({ data: pdfBytes.slice() });
+    pdfDoc = await loadingTask.promise;
+    totalPages = pdfDoc.numPages;
 
-  document.getElementById('fileName').textContent = file.name;
-  document.getElementById('filePages').textContent = `${totalPages} page${totalPages !== 1 ? 's' : ''}`;
-  document.getElementById('fileInfo').classList.add('visible');
-  document.getElementById('resetBtn').style.display = '';
-  document.getElementById('uploadZone').style.display = 'none';
-  document.getElementById('workspace').classList.add('visible');
-  document.getElementById('rangeFrom').max = totalPages;
-  document.getElementById('rangeTo').max = totalPages;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('filePages').textContent = `${totalPages} page${totalPages !== 1 ? 's' : ''}`;
+    document.getElementById('fileInfo').classList.add('visible');
+    document.getElementById('resetBtn').style.display = '';
+    document.getElementById('uploadZone').style.display = 'none';
+    document.getElementById('workspace').classList.add('visible');
+    document.getElementById('rangeFrom').max = totalPages;
+    document.getElementById('rangeTo').max = totalPages;
 
-  pageOrder = Array.from({ length: totalPages }, (_, i) => i + 1);
-  selectedPages.clear();
-  pageOrder.forEach(p => selectedPages.add(p));
+    pageOrder = Array.from({ length: totalPages }, (_, i) => i + 1);
+    selectedPages.clear();
+    pageOrder.forEach(p => selectedPages.add(p));
 
-  renderGrid();
-  updateSelectionCount();
+    renderGrid();
+    updateSelectionCount();
+  } catch (err) {
+    showToast('Could not open PDF: ' + err.message, true);
+    console.error(err);
+    logError('loadFile', err);
+  }
 }
 
 function renderGrid() {
@@ -909,6 +915,7 @@ async function splitPdf() {
     overlay.classList.remove('visible');
     showToast('Error splitting PDF: ' + err.message, true);
     console.error(err);
+    logError('splitPdf', err);
   }
 }
 
@@ -1020,10 +1027,38 @@ document.getElementById('rangeTo').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') addRange();
 });
 
-// --- Feedback (Google Sheets via Apps Script) ---
+// --- Feedback & Error tracking (Google Sheets via Apps Script) ---
 // Deploy the Google Apps Script in apps-script.gs as a Web App
 // ("Anyone" access) and paste its /exec URL below.
+// The same URL is used for both feedback and error logging.
 const FEEDBACK_ENDPOINT = '';
+
+async function logError(context, err) {
+  if (!FEEDBACK_ENDPOINT) return;
+  try {
+    await fetch(FEEDBACK_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'log_error',
+        context,
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? (err.stack || '') : '',
+        url: location.href,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+  } catch (_) {}
+}
+
+window.addEventListener('error', (e) => {
+  logError('uncaught', e.error || new Error(e.message));
+});
+window.addEventListener('unhandledrejection', (e) => {
+  const err = e.reason instanceof Error ? e.reason : new Error(String(e.reason));
+  logError('unhandledrejection', err);
+});
 
 let feedbackRating = 0;
 let feedbackLoaded = false;
@@ -1082,6 +1117,7 @@ async function loadFeedback() {
   } catch (err) {
     container.innerHTML = '<div class="feedback-empty">Could not load feedback.</div>';
     console.error(err);
+    logError('loadFeedback', err);
   }
 }
 
@@ -1169,6 +1205,7 @@ async function submitFeedback() {
   } catch (err) {
     showToast('Could not send feedback', true);
     console.error(err);
+    logError('submitFeedback', err);
   } finally {
     btn.disabled = false;
     btn.textContent = 'Submit';
