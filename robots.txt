@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://splitpdf.app/sitemap.xml
+
+# AI-readable site summary
+Allow: /llms.txt
+

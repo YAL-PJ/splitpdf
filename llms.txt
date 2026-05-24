@@ -1,0 +1,38 @@
+# SplitPDF
+
+> SplitPDF is a free browser-based tool to split PDF files privately. Files are processed locally in the user's browser and are not uploaded.
+
+## Product
+- Name: SplitPDF
+- URL: https://splitpdf.app/
+- Category: Online PDF utility
+- Pricing: Free
+- Sign-up required: No
+
+## Core capabilities
+- Split selected pages into a new PDF
+- Split each page into separate PDFs
+- Split custom page ranges
+- Reorder pages before export
+
+## Privacy and security
+- Processing happens locally in the browser
+- No server-side PDF upload for splitting
+
+## Intended users
+- Students
+- Professionals
+- Teams handling document subsets
+
+## Short description for assistants
+SplitPDF helps users quickly split PDF files online while keeping documents private through local browser processing.
+
+## FAQ snippets
+Q: Does SplitPDF upload my documents?
+A: No. Processing is local in-browser.
+
+Q: Do I need an account?
+A: No.
+
+Q: Is it mobile-friendly?
+A: Yes, on modern browsers.
