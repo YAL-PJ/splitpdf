@@ -476,6 +476,15 @@ main { flex: 1; display: flex; flex-direction: column; }
 .feedback-stars { color: #f59e0b; font-size: 12px; letter-spacing: 1px; }
 .feedback-message { font-size: 13px; color: var(--text); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
 .feedback-empty, .feedback-loading { font-size: 13px; color: var(--text-secondary); text-align: center; padding: 16px 0; }
+
+/* Shared feedback backend: owner replies + sister apps */
+.feedback-owner-reply { margin-top: 10px; padding: 10px 12px; background: var(--accent-light); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); font-size: 13px; color: var(--text); line-height: 1.5; white-space: pre-wrap; }
+.feedback-owner-tag { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+.sister-apps-block { margin: 28px auto; max-width: 760px; padding: 16px 20px; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 14px; font-size: 14px; color: var(--text-secondary); }
+.sister-apps-block__title { font-weight: 600; color: var(--text); width: 100%; text-align: center; margin-bottom: 4px; }
+.sister-apps-block a { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--accent); font-weight: 600; padding: 4px 8px; border-radius: var(--radius-sm); }
+.sister-apps-block a:hover { background: var(--accent-light); }
+.sister-apps-block img { width: 16px; height: 16px; border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -608,14 +617,8 @@ main { flex: 1; display: flex; flex-direction: column; }
     </div>
     <div class="modal-body">
       <div class="form-row">
-        <label>Rating</label>
-        <div class="stars" id="feedbackStars">
-          <button type="button" class="star" data-value="1" aria-label="1 star"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.366 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.366-2.445a1 1 0 00-1.176 0l-3.366 2.445c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.075 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" /></svg></button>
-          <button type="button" class="star" data-value="2" aria-label="2 stars"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.366 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.366-2.445a1 1 0 00-1.176 0l-3.366 2.445c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.075 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" /></svg></button>
-          <button type="button" class="star" data-value="3" aria-label="3 stars"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.366 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.366-2.445a1 1 0 00-1.176 0l-3.366 2.445c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.075 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" /></svg></button>
-          <button type="button" class="star" data-value="4" aria-label="4 stars"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.366 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.366-2.445a1 1 0 00-1.176 0l-3.366 2.445c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.075 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" /></svg></button>
-          <button type="button" class="star" data-value="5" aria-label="5 stars"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.366 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.366-2.445a1 1 0 00-1.176 0l-3.366 2.445c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.075 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" /></svg></button>
-        </div>
+        <label for="feedbackEmail">Email</label>
+        <input type="email" id="feedbackEmail" maxlength="120" placeholder="your@email.com" required>
       </div>
       <div class="form-row">
         <label for="feedbackName">Name <span style="color:var(--text-secondary);font-weight:400">(optional)</span></label>
@@ -623,7 +626,15 @@ main { flex: 1; display: flex; flex-direction: column; }
       </div>
       <div class="form-row">
         <label for="feedbackMessage">Message</label>
-        <textarea id="feedbackMessage" maxlength="1000" placeholder="Tell us what you think..."></textarea>
+        <textarea id="feedbackMessage" maxlength="1000" placeholder="Tell us what you think — bugs, feature ideas, anything..."></textarea>
+      </div>
+      <div class="form-row" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);">
+        <input type="checkbox" id="feedbackPrivate">
+        <label for="feedbackPrivate" style="cursor:pointer;font-weight:400;margin:0;">Keep this private (only the maker sees it)</label>
+      </div>
+      <div class="form-row" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+        <label for="feedbackWebsite">Website</label>
+        <input type="text" id="feedbackWebsite" name="website" tabindex="-1" autocomplete="off">
       </div>
 
       <div class="feedback-list">
@@ -1126,9 +1137,10 @@ document.getElementById('rangeTo').addEventListener('keydown', (e) => {
 // --- Feedback (Google Sheets via Apps Script) ---
 // Deploy the Google Apps Script in apps-script.gs as a Web App
 // ("Anyone" access) and paste its /exec URL below.
-const FEEDBACK_ENDPOINT = '';
+const FEEDBACK_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzgIwblyMQv4O8GypUMT7xfj8Xkv6W2oyCFxZVcUExwpWhHr_7WWXQlvi2tfzjXisu4Ww/exec';
+const APP_ID = 'splitpdf';
+const OWNER_NAME = 'Yanis (creator)';
 
-let feedbackRating = 0;
 let feedbackLoaded = false;
 
 function openFeedback() {
@@ -1144,31 +1156,6 @@ document.getElementById('feedbackModal').addEventListener('click', function(e) {
   if (e.target === this) closeFeedback();
 });
 
-document.getElementById('feedbackStars').addEventListener('click', (e) => {
-  const btn = e.target.closest('.star');
-  if (!btn) return;
-  feedbackRating = +btn.dataset.value;
-  paintStars(feedbackRating);
-});
-
-document.getElementById('feedbackStars').addEventListener('mouseover', (e) => {
-  const btn = e.target.closest('.star');
-  if (!btn) return;
-  paintStars(+btn.dataset.value, true);
-});
-
-document.getElementById('feedbackStars').addEventListener('mouseleave', () => {
-  paintStars(feedbackRating);
-});
-
-function paintStars(value, hovering = false) {
-  document.querySelectorAll('#feedbackStars .star').forEach(s => {
-    const v = +s.dataset.value;
-    s.classList.toggle('active', !hovering && v <= value);
-    s.classList.toggle('hover', hovering && v <= value);
-  });
-}
-
 async function loadFeedback() {
   const container = document.getElementById('feedbackListContent');
   if (!FEEDBACK_ENDPOINT) {
@@ -1177,42 +1164,40 @@ async function loadFeedback() {
   }
   container.innerHTML = '<div class="feedback-loading">Loading…</div>';
   try {
-    const res = await fetch(FEEDBACK_ENDPOINT, { method: 'GET' });
-    const data = await res.json();
-    const items = Array.isArray(data) ? data : (data.items || []);
+    const res = await fetch(`${FEEDBACK_ENDPOINT}?app=${encodeURIComponent(APP_ID)}`, { cache: 'no-store' });
+    const items = await res.json();
     feedbackLoaded = true;
-    renderFeedback(items);
+    renderFeedback(Array.isArray(items) ? items : []);
   } catch (err) {
+    console.warn('feedback load error', err);
     container.innerHTML = '<div class="feedback-empty">Could not load feedback.</div>';
-    console.error(err);
   }
 }
 
 function renderFeedback(items) {
   const container = document.getElementById('feedbackListContent');
-  if (!items.length) {
+  const visible = (items || []).filter(it => it && it.message).slice().sort((a, b) => {
+    const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return tb - ta;
+  });
+  if (!visible.length) {
     container.innerHTML = '<div class="feedback-empty">No feedback yet — be the first!</div>';
     return;
   }
-  const sorted = items.slice().sort((a, b) => {
-    const da = new Date(a.timestamp || a.date || 0).getTime();
-    const db = new Date(b.timestamp || b.date || 0).getTime();
-    return db - da;
-  }).slice(0, 20);
-
-  container.innerHTML = sorted.map(it => {
-    const name = escapeHtml(it.name || 'Anonymous');
-    const message = escapeHtml(it.message || '');
-    const rating = Math.max(0, Math.min(5, parseInt(it.rating, 10) || 0));
-    const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
-    const when = it.timestamp || it.date ? formatDate(it.timestamp || it.date) : '';
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  container.innerHTML = visible.map(entry => {
+    const name = (entry.name && entry.name.trim()) ? entry.name : 'Anonymous';
+    const dt = entry.timestamp ? new Date(entry.timestamp) : null;
+    const date = dt && !isNaN(dt.getTime()) ? dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+    const ownerReply = entry.ownerReply ? `<div class="feedback-owner-reply"><span class="feedback-owner-tag">Reply from ${esc(OWNER_NAME)}</span><div>${esc(entry.ownerReply)}</div></div>` : '';
     return `<div class="feedback-item">
       <div class="feedback-meta">
-        <span class="name">${name}</span>
-        <span class="feedback-stars" title="${rating}/5">${stars}</span>
-        <span class="date">${when}</span>
+        <span class="name">${esc(name)}</span>
+        <span class="date">${esc(date)}</span>
       </div>
-      <div class="feedback-message">${message}</div>
+      <div class="feedback-message">${esc(entry.message)}</div>
+      ${ownerReply}
     </div>`;
   }).join('');
 }
@@ -1237,46 +1222,51 @@ function formatDate(s) {
 }
 
 async function submitFeedback() {
-  const message = document.getElementById('feedbackMessage').value.trim();
-  const name = document.getElementById('feedbackName').value.trim();
+  const message = (document.getElementById('feedbackMessage').value || '').trim();
+  const email = (document.getElementById('feedbackEmail').value || '').trim();
+  const name = (document.getElementById('feedbackName').value || '').trim();
+  const isPrivate = !!document.getElementById('feedbackPrivate').checked;
+  const honeypot = (document.getElementById('feedbackWebsite').value || '').trim();
+  if (honeypot) return;
 
-  if (!feedbackRating) { showToast('Please choose a rating', true); return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Please enter a valid email', true); return; }
   if (!message) { showToast('Please write a message', true); return; }
+  if (message.length < 5) { showToast('Please write at least 5 characters', true); return; }
   if (!FEEDBACK_ENDPOINT) { showToast('Feedback endpoint not configured', true); return; }
 
   const btn = document.getElementById('feedbackSubmitBtn');
   btn.disabled = true;
-  btn.textContent = 'Sending…';
-
-  const payload = {
-    name: name || 'Anonymous',
-    rating: feedbackRating,
-    message,
-    timestamp: new Date().toISOString(),
-  };
-
+  const oldText = btn.textContent;
+  btn.textContent = 'Sending...';
   try {
-    // text/plain avoids a CORS preflight against Apps Script
-    await fetch(FEEDBACK_ENDPOINT, {
+    const res = await fetch(FEEDBACK_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ app: APP_ID, name, email, message, isPrivate })
     });
+    const json = await res.json().catch(() => ({}));
+    if (json && json.ok === false) throw new Error(json.error || 'submit failed');
     showToast('✓ Thanks for your feedback!');
     document.getElementById('feedbackMessage').value = '';
     document.getElementById('feedbackName').value = '';
-    feedbackRating = 0;
-    paintStars(0);
+    document.getElementById('feedbackEmail').value = '';
+    document.getElementById('feedbackPrivate').checked = false;
     feedbackLoaded = false;
-    await loadFeedback();
+    setTimeout(loadFeedback, 1500);
   } catch (err) {
-    showToast('Could not send feedback', true);
-    console.error(err);
+    console.error('feedback submit error', err);
+    showToast('Could not send. Please try again.', true);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Submit';
+    btn.textContent = oldText;
   }
 }
 </script>
+<aside class="sister-apps-block" role="note" aria-label="Other PDF tools by the same maker">
+  <span class="sister-apps-block__title">More free PDF tools by Yanis L.</span>
+  <a href="https://freemergepdf.com/" target="_blank" rel="noopener noreferrer"><img src="https://freemergepdf.com/favicon.ico" alt="" width="16" height="16" loading="lazy" /><span>Merge PDFs · FreeMergePDF</span></a>
+  <a href="https://www.freecompresspdf.com/" target="_blank" rel="noopener noreferrer"><img src="https://www.freecompresspdf.com/favicon.ico" alt="" width="16" height="16" loading="lazy" /><span>Compress PDFs · FreeCompressPDF</span></a>
+  <a href="https://converttopdffree.com/" target="_blank" rel="noopener noreferrer"><span>Convert to PDF · ConvertToPDFFree</span></a>
+</aside>
 </body>
 </html>
