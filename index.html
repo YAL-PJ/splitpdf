@@ -9,7 +9,7 @@
 <link rel="canonical" href="https://splitpdffree.com/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="theme-color" content="#2563eb">
-<meta name="author" content="SplitPDF">
+<meta name="author" content="Yanis L.">
 <meta name="format-detection" content="telephone=no">
 <link rel="alternate" hreflang="en" href="https://splitpdffree.com/">
 <link rel="alternate" hreflang="x-default" href="https://splitpdffree.com/">
@@ -22,6 +22,20 @@
 <meta name="twitter:title" content="SplitPDF — Free Online PDF Splitter">
 <meta name="twitter:description" content="Split PDF pages online for free. Your files stay local in your browser for maximum privacy.">
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://freemergepdf.com/#founder",
+  "name": "Yanis L.",
+  "url": "https://splitpdffree.com/about.html",
+  "image": "https://freemergepdf.com/yanis-avatar.jpg",
+  "sameAs": [
+    "https://www.quora.com/profile/Yanis-L-3",
+    "https://x.com/compress__pdf"
+  ]
+}
+</script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -84,7 +98,8 @@
   "@type": "Organization",
   "name": "SplitPDF",
   "url": "https://splitpdffree.com/",
-  "logo": "https://splitpdffree.com/favicon.svg"
+  "logo": "https://splitpdffree.com/favicon.svg",
+  "founder": { "@id": "https://freemergepdf.com/#founder" }
 }
 </script>
 <!-- Google tag (gtag.js) -->
@@ -565,7 +580,7 @@ main { flex: 1; display: flex; flex-direction: column; }
       </div>
       <button class="btn btn-primary" id="splitBtn" onclick="splitPdf()">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
-        <span id="splitBtnText">Split & Download</span>
+        <span id="splitBtnText">Split &amp; Download</span>
       </button>
     </div>
   </div>
@@ -1267,6 +1282,16 @@ async function submitFeedback() {
   <a href="https://freemergepdf.com/" target="_blank" rel="noopener noreferrer"><img src="https://freemergepdf.com/favicon.ico" alt="" width="16" height="16" loading="lazy" /><span>Merge PDFs · FreeMergePDF</span></a>
   <a href="https://www.freecompresspdf.com/" target="_blank" rel="noopener noreferrer"><img src="https://www.freecompresspdf.com/favicon.ico" alt="" width="16" height="16" loading="lazy" /><span>Compress PDFs · FreeCompressPDF</span></a>
   <a href="https://converttopdffree.com/" target="_blank" rel="noopener noreferrer"><span>Convert to PDF · ConvertToPDFFree</span></a>
+</aside>
+<aside style="max-width:760px;margin:0 auto 48px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;font-size:14px;line-height:1.6;color:#1e3a5f;" aria-label="About the author" itemscope itemtype="https://schema.org/Person">
+  <img src="https://freemergepdf.com/yanis-avatar.jpg" alt="Yanis L." width="56" height="56" style="border-radius:50%;flex-shrink:0;border:2px solid #bfdbfe;" itemprop="image" loading="lazy" />
+  <div>
+    <strong itemprop="name">Yanis L.</strong> — <span itemprop="description">indie maker who builds free, privacy-first PDF tools. SplitPDF, like all the tools in this suite, runs entirely in your browser so your files never leave your device.</span>
+    <span style="display:none;" itemprop="url">https://splitpdffree.com/about.html</span>
+    <span style="display:none;" itemprop="sameAs">https://www.quora.com/profile/Yanis-L-3</span>
+    <span style="display:none;" itemprop="sameAs">https://x.com/compress__pdf</span>
+    <br><a href="/about.html" rel="author" style="color:#2563eb;font-weight:600;">About the maker →</a>
+  </div>
 </aside>
 <script>
   window.__ERROR_TRACKER_CONFIG = {
