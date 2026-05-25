@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://splitpdf.app/sitemap.xml
+Sitemap: https://splitpdffree.com/sitemap.xml
 
 # AI-readable site summary
 Allow: /llms.txt
