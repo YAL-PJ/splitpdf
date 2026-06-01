@@ -8,8 +8,10 @@
  *
  * Handles two kinds of POSTs (routed by JSON body):
  *   1. Feedback   -> { app, name, email, message, isPrivate }                -> "Feedback" tab
- *   2. Error rpt  -> { type: 'error', app, feature, message, stack, ... }    -> "Errors" tab
+ *   2. Error rpt  -> { action: 'error_report', app, feature, message, stack, ... } -> "Errors" tab
+ *      (Also accepts legacy { type: 'error', ... } payloads.)
  *
+ * GET ?action=health      -> backend health ({ ok, feedbackSheet, errorSheet })
  * GET ?app=<id>           -> public feedback list (private rows are masked)
  * GET ?errors=1&app=<id>  -> NOT exposed publicly. Read the Errors tab in the sheet directly.
  *
@@ -20,7 +22,7 @@
  *  2. Add a new tab named "Errors". Row 1, exact spelling, in this order
  *     (one column per name; "|" is just a separator here):
  *
- *       id | timestamp | app | feature | code | message | stack | url | userAgent | sessionId | fileName | userNote | status
+ *       id | timestamp | app | feature | code | message | stack | url | userAgent | sessionId | fileName | userNote | appVersion | status
  *
  *  3. Replace the Apps Script contents with this whole file.
  *  4. Deploy -> Manage deployments -> edit the existing one -> New version -> Deploy.
@@ -41,7 +43,7 @@ const SHEET_FEEDBACK = 'Feedback';
 const FEEDBACK_HEADERS = ['id', 'timestamp', 'app', 'name', 'email', 'message', 'isPrivate', 'ownerReply', 'ownerReplyDate'];
 
 const SHEET_ERRORS = 'Errors';
-const ERROR_HEADERS = ['id', 'timestamp', 'app', 'feature', 'code', 'message', 'stack', 'url', 'userAgent', 'sessionId', 'fileName', 'userNote', 'status'];
+const ERROR_HEADERS = ['id', 'timestamp', 'app', 'feature', 'code', 'message', 'stack', 'url', 'userAgent', 'sessionId', 'fileName', 'userNote', 'appVersion', 'status'];
 
 const KNOWN_APPS = ['freemergepdf', 'splitpdf', 'converttopdf', 'compresspdf'];
 
@@ -60,6 +62,15 @@ const MAX_NOTE = 500;
 function doGet(e) {
   try {
     const params = (e && e.parameter) || {};
+    const action = String(params.action || '').toLowerCase();
+    if (action === 'health') {
+      return json_({
+        ok: true,
+        feedbackSheet: !!getFeedbackSheet_(),
+        errorSheet: !!getErrorsSheet_()
+      });
+    }
+
     const wantedApp = params.app ? String(params.app).toLowerCase() : null;
 
     const sheet = getFeedbackSheet_();
@@ -111,6 +122,9 @@ function doPost(e) {
       return handleError_(inner);
     }
 
+    const action = String(body.action || '').toLowerCase();
+    if (action === 'error_report') return handleError_(body);
+
     const type = String(body.type || 'feedback').toLowerCase();
     if (type === 'error') return handleError_(body);
     return handleFeedback_(body);
@@ -161,9 +175,10 @@ function handleError_(body) {
     String(body.sessionId || '').slice(0, MAX_SESSION),
     String(body.fileName || '').slice(0, MAX_FILENAME),
     String(body.userNote || '').slice(0, MAX_NOTE),
+    String(body.appVersion || '').slice(0, MAX_CODE),
     '' // status — owner fills in
   ]);
-  return json_({ ok: true, id: id });
+  return json_({ ok: true, id: id, target: 'apps-script' });
 }
 
 function getFeedbackSheet_() {

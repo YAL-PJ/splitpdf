@@ -15,7 +15,9 @@
  *     <script src="error-tracker.js" defer></script>
  *
  *   Also exposes window.reportError(err, { feature, userNote, fileName, code })
- *   for manual reports (e.g. from a "Report issue" button).
+ *   for manual reports (e.g. from a "Report issue" button). It returns
+ *   a Promise resolving to { ok: true, target: 'apps-script' } when the
+ *   Apps Script accepts the report.
  *
  *   Posts as text/plain JSON to avoid CORS preflight. Fire-and-forget; any
  *   failure inside the tracker is swallowed so user flows aren't affected.
@@ -138,10 +140,10 @@
 
   function send_(err, context) {
     try {
-      if (!ENDPOINT || !APP_ID) return;
-      if (sentInSession >= SESSION_BUDGET) return;
+      if (!ENDPOINT || !APP_ID) return Promise.resolve({ ok: false, target: 'disabled' });
+      if (sentInSession >= SESSION_BUDGET) return Promise.resolve({ ok: false, target: 'throttled' });
       context = context || {};
-      if (shouldIgnoreNoise_(err, context)) return;
+      if (shouldIgnoreNoise_(err, context)) return Promise.resolve({ ok: false, target: 'ignored' });
 
       var normalized = normalize_(err);
       var message = scrub_(normalized.message).slice(0, MESSAGE_MAX) || 'Unknown error';
@@ -159,6 +161,7 @@
       sentInSession += 1;
 
       var payload = {
+        action: 'error_report',
         type: 'error',
         app: APP_ID,
         feature: feature,
@@ -174,15 +177,25 @@
       };
 
       // keepalive so we still send on page unload
-      fetch(ENDPOINT, {
+      return fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload),
         keepalive: true,
         mode: 'cors'
-      }).catch(function () { /* fire-and-forget */ });
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (json) {
+          if (json && json.ok === false) {
+            return { ok: false, target: 'apps-script', error: json.error || 'report rejected' };
+          }
+          return { ok: true, target: 'apps-script' };
+        });
+      }).catch(function (fetchErr) {
+        return { ok: false, target: 'apps-script', error: String(fetchErr && fetchErr.message || fetchErr) };
+      });
     } catch (reporterErr) {
       try { console.warn('Error tracker failed:', reporterErr); } catch (_) {}
+      return Promise.resolve({ ok: false, target: 'reporter', error: String(reporterErr && reporterErr.message || reporterErr) });
     }
   }
 
