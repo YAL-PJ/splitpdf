@@ -3,3 +3,7 @@
 // See google-apps-script/feedback-backend.gs for the live backend and setup
 // instructions. Deploy that file once (Extensions -> Apps Script -> Deploy as
 // Web app) and paste the /exec URL into FEEDBACK_ENDPOINT in index.html.
+//
+// The backend already handles error tracking: client-side errors are posted
+// with { action: 'error_report', app: 'splitpdf', ... } and logged to the
+// "Errors" tab in the Google Sheet automatically.
