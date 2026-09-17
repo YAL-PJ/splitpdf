@@ -679,6 +679,11 @@ let selectedPages = new Set();
 let splitMode = 'selected';
 let customRanges = [];
 let pageOrder = []; // display order → original page number (enables drag reorder)
+// Structural, non-identifying facts about the loaded PDF, attached to error
+// reports so a crash that depends on one particular file can be reproduced.
+// See the privacy note in error-tracker.js: no bytes, no text, no Title/Author.
+let lastPdfMeta = null;
+let lastFileName = '';
 
 const fileInput = document.getElementById('fileInput');
 const uploadBox = document.getElementById('uploadBox');
@@ -708,10 +713,13 @@ async function loadFile(file) {
   try {
     const buffer = await file.arrayBuffer();
     pdfBytes = new Uint8Array(buffer);
+    lastFileName = file.name;
+    lastPdfMeta = safePdfMeta(pdfBytes);
 
     const loadingTask = pdfjsLib.getDocument({ data: pdfBytes.slice() });
     pdfDoc = await loadingTask.promise;
     totalPages = pdfDoc.numPages;
+    if (lastPdfMeta) lastPdfMeta.pageCount = totalPages; // exact beats our estimate
 
     document.getElementById('fileName').textContent = file.name;
     document.getElementById('filePages').textContent = `${totalPages} page${totalPages !== 1 ? 's' : ''}`;
@@ -731,7 +739,7 @@ async function loadFile(file) {
   } catch (err) {
     showToast('Could not open PDF: ' + err.message, true);
     console.error(err);
-    logError('loadFile', err);
+    logError('loadFile', err, { kind: 'open-failed' });
   }
 }
 
@@ -1044,7 +1052,7 @@ async function splitPdf() {
     overlay.classList.remove('visible');
     showToast('Error splitting PDF: ' + err.message, true);
     console.error(err);
-    logError('splitPdf', err);
+    logError('splitPdf', err, { kind: 'split-failed' });
   }
 }
 
@@ -1163,7 +1171,41 @@ const FEEDBACK_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzgIwblyMQv4O
 const APP_ID = 'splitpdf';
 const OWNER_NAME = 'Yanis (creator)';
 
-async function logError(feature, err) {
+// Best-effort safe metadata for the current file. Never throws, never blocks:
+// if error-tracker.js has not loaded yet we simply report without metadata.
+function safePdfMeta(bytes, hints) {
+  try {
+    if (window.__errorTrackerPdfMeta) {
+      const meta = window.__errorTrackerPdfMeta.fromBytes(bytes, hints);
+      window.__lastPdfMeta = meta; // exposed for the Playwright tests
+      return meta;
+    }
+  } catch (_) {}
+  return null;
+}
+
+// userNote breadcrumb, same shape the sibling PDF tools use, e.g.
+// mode=selected;step=splitPdf;kind=split-failed;pages=3;pdfVersion=1.4;...
+function breadcrumb(feature, extra) {
+  try {
+    const parts = [];
+    if (splitMode) parts.push('mode=' + splitMode);
+    parts.push('step=' + feature);
+    if (extra && extra.kind) parts.push('kind=' + extra.kind);
+    if (totalPages) parts.push('pages=' + totalPages);
+    if (splitMode === 'selected') parts.push('selected=' + selectedPages.size);
+    if (splitMode === 'ranges') parts.push('ranges=' + customRanges.length);
+    const crumb = (window.__errorTrackerPdfMeta && lastPdfMeta)
+      ? window.__errorTrackerPdfMeta.breadcrumb(lastPdfMeta)
+      : '';
+    if (crumb) parts.push(crumb);
+    return parts.join(';').slice(0, 500);
+  } catch (_) {
+    return '';
+  }
+}
+
+async function logError(feature, err, extra) {
   if (!FEEDBACK_ENDPOINT) return;
   try {
     await fetch(FEEDBACK_ENDPOINT, {
@@ -1178,6 +1220,10 @@ async function logError(feature, err) {
         url: location.href,
         userAgent: navigator.userAgent,
         timestamp: new Date().toISOString(),
+        // File name only (already a backend field) plus structural metadata —
+        // never the file itself. See error-tracker.js for what is excluded.
+        fileName: lastFileName || '',
+        userNote: breadcrumb(feature, extra),
       }),
     });
   } catch (_) {}
