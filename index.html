@@ -1229,13 +1229,13 @@ async function logError(feature, err, extra) {
   } catch (_) {}
 }
 
-window.addEventListener('error', (e) => {
-  logError('uncaught', e.error || new Error(e.message));
-});
-window.addEventListener('unhandledrejection', (e) => {
-  const err = e.reason instanceof Error ? e.reason : new Error(String(e.reason));
-  logError('unhandledrejection', err);
-});
+// No global error/unhandledrejection listeners here on purpose: error-tracker.js
+// already installs them, and two sets meant every uncaught error was reported
+// twice — inflating the `count` the triage job sees for a single bug. Its
+// handlers are the better ones to keep: they drop cross-origin "Script error."
+// noise and carry sessionId. logError below stays for the explicit,
+// feature-level reports, which are the ones that have a file in hand and so can
+// attach PDF metadata.
 
 let feedbackLoaded = false;
 
